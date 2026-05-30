@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPECOPS // SPELLING</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-2: #161b22;
+    --panel: #1c2128;
+    --border: #30363d;
+    --border-active: #4a9c4a;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-bright: #f0f6fc;
+    --green: #4a9c4a;
+    --green-bright: #6cd36c;
+    --green-glow: rgba(108, 211, 108, 0.4);
+    --amber: #d4a44c;
+    --red: #cf5050;
+    --red-glow: rgba(207, 80, 80, 0.4);
+    --grid: rgba(74, 156, 74, 0.06);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: 'Courier New', 'Consolas', 'Menlo', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .container { max-width: 700px; margin: 0 auto; padding: 12px; }
+
+  /* === HUD HEADER === */
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .hud-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hud-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green-glow);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin: 8px 0 2px;
+    letter-spacing: 6px;
+    color: var(--text-bright);
+    font-weight: bold;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin: 14px 0;
+    position: relative;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 12px; height: 12px;
+    border-top: 2px solid var(--green);
+    border-left: 2px solid var(--green);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; right: -1px;
+    width: 12px; height: 12px;
+    border-bottom: 2px solid var(--green);
+    border-right: 2px solid var(--green);
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 8px;
+  }
+
+  /* === MISSION SELECTOR === */
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .group-btn {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 14px 8px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+  }
+  .group-btn:hover {
+    border-color: var(--green);
+    background: var(--panel);
+    color: var(--green-bright);
+  }
+  .group-btn.active {
+    border-color: var(--green);
+    background: rgba(74, 156, 74, 0.1);
+    color: var(--green-bright);
+  }
+  .group-btn .op-num {
+    display: block;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+  }
+  .group-btn .op-name {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  /* === GROUNDING / RETICLE === */
+  .grounding {
+    text-align: center;
+    padding: 24px 12px;
+  }
+  .grounding-title {
+    font-size: 16px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--green-bright);
+    margin-bottom: 6px;
+  }
+  .grounding-subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .reticle-wrap {
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 18px;
+    position: relative;
+  }
+  .reticle-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    transition: all 0.4s ease;
+  }
+  .reticle-ring.r1 { inset: 0; }
+  .reticle-ring.r2 { inset: 30px; }
+  .reticle-ring.r3 { inset: 60px; border-style: dashed; }
+  .reticle-ring.r4 { inset: 90px; }
+  .reticle-cross {
+    position: absolute;
+    background: var(--border);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .reticle-cross.h {
+    top: 50%; left: 10px; right: 10px;
+    height: 1px; transform: translateY(-50%);
+  }
+  .reticle-cross.v {
+    left: 50%; top: 10px; bottom: 10px;
+    width: 1px; transform: translateX(-50%);
+  }
+  .reticle-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px; height: 16px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--green-glow);
+    transition: background 0.2s, box-shadow 0.2s;
+    animation: scanPulse 2s ease-in-out infinite;
+  }
+  @keyframes scanPulse {
+    0%, 100% { box-shadow: 0 0 8px var(--green-glow); opacity: 0.7; }
+    50% { box-shadow: 0 0 18px var(--green); opacity: 1; }
+  }
+  .reticle-center.locked {
+    background: var(--green-bright);
+    box-shadow: 0 0 24px var(--green-bright), 0 0 48px var(--green-glow);
+    animation: none;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  
+  /* Jitter when device is moving — applied to the center */
+  .reticle-center.jitter {
+    animation: jitter 0.15s ease-in-out infinite;
+  }
+  @keyframes jitter {
+    0% { transform: translate(-50%, -50%) translate(0,0); }
+    25% { transform: translate(-50%, -50%) translate(-3px, 2px); }
+    50% { transform: translate(-50%, -50%) translate(2px, -3px); }
+    75% { transform: translate(-50%, -50%) translate(-2px, -1px); }
+    100% { transform: translate(-50%, -50%) translate(0,0); }
+  }
+  
+  /* Sweeping scan line for "alive" idle state */
+  .reticle-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.5;
+  }
+  .reticle-sweep::before {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 50%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green-bright), transparent);
+    transform-origin: left center;
+    animation: sweep 3s linear infinite;
+  }
+  @keyframes sweep {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .reticle-wrap.locked .reticle-sweep { display: none; }
+  
+  .reticle-wrap.locked .reticle-ring {
+    border-color: var(--green);
+  }
+  .reticle-wrap.locked .reticle-cross {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green-glow);
+  }
+  
+  /* corner brackets on reticle */
+  .reticle-bracket {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: var(--text-dim);
+    transition: border-color 0.3s;
+  }
+  .reticle-bracket.tl { top: 0; left: 0; border-top: 2px solid; border-left: 2px solid; }
+  .reticle-bracket.tr { top: 0; right: 0; border-top: 2px solid; border-right: 2px solid; }
+  .reticle-bracket.bl { bottom: 0; left: 0; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle-bracket.br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; }
+  .reticle-wrap.locked .reticle-bracket { border-color: var(--green); }
+  
+  .signal-bar-wrap {
+    width: 240px;
+    height: 6px;
+    border: 1px solid var(--border);
+    margin: 0 auto 10px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .signal-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--green));
+    width: 0%;
+    transition: width 0.12s linear;
+  }
+  
+  .signal-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    min-height: 18px;
+    margin-bottom: 6px;
+  }
+  .signal-label.steady {
+    color: var(--green-bright);
+  }
+  
+  .countdown {
+    font-size: 64px;
+    color: var(--green-bright);
+    text-shadow: 0 0 16px var(--green-glow);
+    font-weight: bold;
+    margin: 10px 0;
+    letter-spacing: 4px;
+    min-height: 64px;
+  }
+  
+  .skip-link {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 6px 14px;
+    margin-top: 12px;
+  }
+  .skip-link:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* === STIMULUS === */
+  .stimulus-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    margin: 12px 0;
+    padding: 0;
+  }
+  .stimulus-wrap::before,
+  .stimulus-wrap::after {
+    content: "";
+    position: absolute;
+    width: 8px; height: 8px;
+    border-color: var(--green);
+  }
+  .stimulus-wrap::before {
+    top: -1px; left: -1px;
+    border-top: 2px solid var(--green);
+    border-left: 2px solid var(--green);
+  }
+  .stimulus-wrap::after {
+    bottom: -1px; right: -1px;
+    border-bottom: 2px solid var(--green);
+    border-right: 2px solid var(--green);
+  }
+  .stimulus-meta {
+    background: var(--panel);
+    padding: 6px 10px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+  .stimulus {
+    text-align: center;
+    padding: 30px 16px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .emoji-big {
+    font-size: 110px;
+    line-height: 1.1;
+    filter: drop-shadow(0 0 12px var(--green-glow));
+  }
+  .audio-icon {
+    font-size: 80px;
+    line-height: 1.1;
+    color: var(--green-bright);
+    filter: drop-shadow(0 0 16px var(--green-glow));
+  }
+  .audio-icon.pulse {
+    animation: audioPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes audioPulse {
+    0%, 100% { filter: drop-shadow(0 0 16px var(--green-glow)); }
+    50% { filter: drop-shadow(0 0 28px var(--green-bright)); }
+  }
+  .stim-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .replay-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+  .replay-btn:hover { color: var(--green); border-color: var(--green); }
+  
+  .reveal-word {
+    font-size: 36px;
+    margin-top: 14px;
+    color: var(--green-bright);
+    letter-spacing: 6px;
+    text-shadow: 0 0 12px var(--green-glow);
+    font-weight: bold;
+  }
+
+  /* === PROGRESS === */
+  .progress-bar {
+    height: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.3s;
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  /* === ACTIONS === */
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .action-btn {
+    border: 1px solid;
+    background: var(--bg-2);
+    padding: 16px 6px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+  .action-btn:active { transform: translateY(1px); }
+  .correct-btn { color: var(--green-bright); border-color: var(--green); }
+  .correct-btn:hover { background: rgba(74, 156, 74, 0.12); box-shadow: 0 0 12px var(--green-glow); }
+  .incorrect-btn { color: var(--red); border-color: var(--red); }
+  .incorrect-btn:hover { background: rgba(207, 80, 80, 0.12); box-shadow: 0 0 12px var(--red-glow); }
+  .skip-btn { color: var(--amber); border-color: var(--amber); }
+  .skip-btn:hover { background: rgba(212, 164, 76, 0.12); }
+
+  .util-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .util-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-dim);
+  }
+  .util-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* === RESULTS === */
+  .summary-box {
+    text-align: center;
+    padding: 14px;
+    border: 1px solid var(--border);
+    margin: 10px 0;
+    background: var(--bg);
+  }
+  .summary-stat {
+    display: inline-block;
+    margin: 0 16px;
+    text-align: center;
+  }
+  .summary-stat .num {
+    font-size: 36px;
+    font-weight: bold;
+    display: block;
+    letter-spacing: 2px;
+  }
+  .summary-stat .lbl {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 12px;
+    align-items: center;
+  }
+  .result-row .word { font-weight: bold; letter-spacing: 1px; color: var(--text-bright); }
+  .result-row .status {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .result-row .status.correct { color: var(--green-bright); }
+  .result-row .status.incorrect { color: var(--red); }
+  .result-row .status.skip { color: var(--amber); }
+
+  /* === NOTE INPUT === */
+  .note-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    padding: 10px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    margin-top: 10px;
+    resize: vertical;
+  }
+  .note-input:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+  .note-input::placeholder {
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .hidden { display: none; }
+
+  .briefing {
+    text-align: center;
+    padding: 12px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.8;
+    letter-spacing: 1px;
+  }
+  .briefing strong { color: var(--green-bright); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-status"><div class="hud-dot"></div>SIGNAL // LIVE</div>
+    <div id="opIdHud">OP-00 // READY</div>
+  </div>
+
+  <h1>SPECOPS SPELLING</h1>
+  <div class="subtitle">// TACTICAL ASSESSMENT PROTOCOL //</div>
+
+  <!-- WELCOME -->
+  <div id="welcome" class="panel">
+    <div class="panel-label">// MISSION BRIEFING</div>
+    <div class="briefing">
+      Select a <strong>mission group</strong> below. Operator <strong>grounds</strong> before each mission — hold position until target lock confirms. Picture and audio reveal together. Spell each word with magnetic letters. Mark result on debrief panel.
+    </div>
+  </div>
+
+  <!-- GROUP SELECTOR -->
+  <div id="groupSelector" class="panel">
+    <div class="panel-label">// SELECT MISSION</div>
+    <div class="groups" id="groupGrid"></div>
+  </div>
+
+  <!-- GROUNDING -->
+  <div id="grounding" class="panel hidden">
+    <div class="panel-label">// PRE-MISSION GROUNDING</div>
+    <div class="grounding">
+      <div class="grounding-title" id="groundingTitle">MISSION READY</div>
+      <div class="grounding-subtitle">Hold position. Acquire target lock.</div>
+      
+      <div class="reticle-wrap" id="reticleWrap">
+        <div class="reticle-sweep"></div>
+        <div class="reticle-ring r1"></div>
+        <div class="reticle-ring r2"></div>
+        <div class="reticle-ring r3"></div>
+        <div class="reticle-ring r4"></div>
+        <div class="reticle-cross h"></div>
+        <div class="reticle-cross v"></div>
+        <div class="reticle-bracket tl"></div>
+        <div class="reticle-bracket tr"></div>
+        <div class="reticle-bracket bl"></div>
+        <div class="reticle-bracket br"></div>
+        <div class="reticle-center" id="reticleCenter"></div>
+      </div>
+      
+      <div class="signal-bar-wrap"><div class="signal-bar-fill" id="gyroBarFill"></div></div>
+      <div class="signal-label" id="gyroStatus">// SCANNING FOR SIGNAL...</div>
+      
+      <div class="countdown" id="countdown"></div>
+      
+      <button class="skip-link" onclick="skipGrounding()">Override // Skip Grounding</button>
+    </div>
+  </div>
+
+  <!-- ASSESSMENT -->
+  <div id="assessment" class="panel hidden">
+    <div class="stimulus-wrap">
+      <div class="stimulus-meta">
+        <span id="groupTitleMeta">OP-01</span>
+        <span>WORD <span id="wordNum">1</span> / <span id="wordTotal">10</span></span>
+      </div>
+      <div class="stimulus" id="stimulus"></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    
+    <textarea class="note-input" id="noteInput" placeholder="// Field notes: how he spelled it (e.g., SNIPER → SNYPR)"></textarea>
+    
+    <div class="actions">
+      <button class="action-btn correct-btn" onclick="recordResponse('correct')">✓ HIT</button>
+      <button class="action-btn incorrect-btn" onclick="recordResponse('incorrect')">✗ MISS</button>
+      <button class="action-btn skip-btn" onclick="recordResponse('skip')">→ SKIP</button>
+    </div>
+    
+    <div class="util-btns">
+      <button class="util-btn" onclick="revealWord()">Reveal Target</button>
+      <button class="util-btn" onclick="endSession()">Abort Mission</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="panel hidden">
+    <div class="panel-label">// MISSION DEBRIEF</div>
+    <div class="summary-box">
+      <div class="summary-stat"><span class="num" id="statCorrect" style="color:var(--green-bright)">0</span><span class="lbl">Hits</span></div>
+      <div class="summary-stat"><span class="num" id="statIncorrect" style="color:var(--red)">0</span><span class="lbl">Miss</span></div>
+      <div class="summary-stat"><span class="num" id="statSkip" style="color:var(--amber)">0</span><span class="lbl">Skip</span></div>
+    </div>
+    <div id="resultsList"></div>
+    <div class="util-btns" style="margin-top:14px;">
+      <button class="util-btn" onclick="exportCSV()">Export Intel</button>
+      <button class="util-btn" onclick="nextMission()">Next Mission</button>
+      <button class="util-btn" onclick="newSession()">Return to Base</button>
+      <button class="util-btn" onclick="viewHistory()">Mission Log</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="history" class="panel hidden">
+    <div class="panel-label">// MISSION LOG</div>
+    <div id="historyList"></div>
+    <div class="util-btns" style="margin-top:14px;">
+      <button class="util-btn" onclick="document.getElementById('history').classList.add('hidden')">← Back</button>
+      <button class="util-btn" onclick="clearHistory()" style="color:var(--red); border-color:var(--red)">Wipe Log</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============== DATA ==============
+const groups = {
+  1: { title: "OP-01 // SHORT VOWELS", code: "3-LETTER OPS", words: [
+    {w:"Gun", e:"🔫"}, {w:"Med", e:"⛑️"}, {w:"Map", e:"🗺️"}, {w:"Fin", e:"🥽"},
+    {w:"Mud", e:"💩"}, {w:"Jet", e:"✈️"}, {w:"Cop", e:"👮"}, {w:"Run", e:"🏃"},
+    {w:"Kit", e:"🎒"}, {w:"Pit", e:"🕳️"},
+    {w:"Vop", e:null, n:true}, {w:"Zid", e:null, n:true}, {w:"Teg", e:null, n:true},
+    {w:"Bap", e:null, n:true}, {w:"Nut", e:"🌰"}
+  ]},
+  2: { title: "OP-02 // DIGRAPHS", code: "SH CH TH WH CK", words: [
+    {w:"Ship", e:"🚢"}, {w:"Chop", e:"🚁"}, {w:"Thin", e:null}, {w:"Whip", e:null},
+    {w:"Deck", e:null}, {w:"Shot", e:"💥"}, {w:"Chat", e:"📻"}, {w:"Cash", e:"💵"},
+    {w:"Tech", e:"💻"}, {w:"Path", e:"🛤️"},
+    {w:"Shing", e:null, n:true}, {w:"Chog", e:null, n:true}, {w:"Thack", e:null, n:true},
+    {w:"Whump", e:null, n:true}, {w:"Keck", e:null, n:true}
+  ]},
+  3: { title: "OP-03 // FLSZ + H-BLENDS", code: "HEAVY COMBAT", words: [
+    {w:"Cliff", e:"🧗"}, {w:"Boss", e:"🎖️"}, {w:"Buzz", e:"🐝"}, {w:"Pass", e:null},
+    {w:"Shell", e:"🐚"}, {w:"Muck", e:null}, {w:"Shed", e:"🛖"}, {w:"Shut", e:null},
+    {w:"Hut", e:"⛺"}, {w:"Hill", e:"⛰️"},
+    {w:"Zoff", e:null, n:true}, {w:"Gless", e:null, n:true}, {w:"Floss", e:null, n:true},
+    {w:"Blizz", e:null, n:true}, {w:"Shrod", e:null, n:true}
+  ]},
+  4: { title: "OP-04 // BLENDS", code: "TACTICAL MOVEMENT", words: [
+    {w:"Blast", e:"💥"}, {w:"Stamp", e:null}, {w:"Crawl", e:null}, {w:"Grip", e:"✊"},
+    {w:"Track", e:"👣"}, {w:"Swift", e:null}, {w:"Trent", e:null}, {w:"Plant", e:"🌱"},
+    {w:"Crest", e:null}, {w:"Flank", e:null},
+    {w:"Clift", e:null, n:true}, {w:"Sprat", e:null, n:true}, {w:"Plond", e:null, n:true},
+    {w:"Strem", e:null, n:true}, {w:"Grent", e:null, n:true}
+  ]},
+  5: { title: "OP-05 // SILENT E", code: "STEALTH PROTOCOL", words: [
+    {w:"Brave", e:"🦁"}, {w:"Snipe", e:"🎯"}, {w:"Zone", e:null}, {w:"Base", e:"🏚️"},
+    {w:"Blade", e:"🗡️"}, {w:"Code", e:"🔢"}, {w:"Drive", e:"🚗"}, {w:"Rope", e:null},
+    {w:"Smoke", e:"💨"}, {w:"Fire", e:"🔥"},
+    {w:"Flote", e:null, n:true}, {w:"Sprime", e:null, n:true}, {w:"Clane", e:null, n:true},
+    {w:"Zute", e:null, n:true}, {w:"Grake", e:null, n:true}
+  ]},
+  6: { title: "OP-06 // OPEN + Y", code: "AIR SUPPORT", words: [
+    {w:"Fly", e:"🪰"}, {w:"Spy", e:"🕵️"}, {w:"Pi", e:null}, {w:"No", e:"🚫"},
+    {w:"Sky", e:"☁️"}, {w:"Cry", e:"😢"}, {w:"Ally", e:null}, {w:"Army", e:"🪖"},
+    {w:"Navy", e:"⚓"}, {w:"Duty", e:null},
+    {w:"Splo", e:null, n:true}, {w:"Zigh", e:null, n:true}, {w:"Kry", e:null, n:true},
+    {w:"Traby", e:null, n:true}, {w:"Bly", e:null, n:true}
+  ]},
+  7: { title: "OP-07 // R-CONTROLLED", code: "BOSSY R BRIGADE", words: [
+    {w:"Armor", e:"🛡️"}, {w:"Target", e:"🎯"}, {w:"March", e:null}, {w:"Fort", e:"🏰"},
+    {w:"Cargo", e:"📦"}, {w:"Shirt", e:"👕"}, {w:"Bird", e:"🦅"}, {w:"Storm", e:"⛈️"},
+    {w:"Force", e:null}, {w:"Alarm", e:"🚨"},
+    {w:"Gorp", e:null, n:true}, {w:"Smurk", e:null, n:true}, {w:"Berth", e:null, n:true},
+    {w:"Skart", e:null, n:true}, {w:"Flir", e:null, n:true}
+  ]},
+  8: { title: "OP-08 // VOWEL TEAMS", code: "INTEL & COMMS", words: [
+    {w:"Raid", e:null}, {w:"Boat", e:"🚤"}, {w:"Night", e:"🌙"}, {w:"Team", e:"👥"},
+    {w:"Fleet", e:null}, {w:"Train", e:"🚂"}, {w:"Coast", e:"🏖️"}, {w:"Brain", e:"🧠"},
+    {w:"Flight", e:null}, {w:"Main", e:null},
+    {w:"Snoat", e:null, n:true}, {w:"Blaff", e:null, n:true}, {w:"Grait", e:null, n:true},
+    {w:"Freem", e:null, n:true}, {w:"Skaigh", e:null, n:true}
+  ]},
+  9: { title: "OP-09 // DIPHTHONGS", code: "HEAVY MACHINERY", words: [
+    {w:"Scout", e:null}, {w:"Hawk", e:"🦅"}, {w:"Prowl", e:null}, {w:"Boots", e:"🥾"},
+    {w:"Launch", e:"🚀"}, {w:"Destroy", e:"💣"}, {w:"Oil", e:"🛢️"}, {w:"Crew", e:null},
+    {w:"Ground", e:null}, {w:"Sound", e:"🔊"},
+    {w:"Sploit", e:null, n:true}, {w:"Chawk", e:null, n:true}, {w:"Broon", e:null, n:true},
+    {w:"Floud", e:null, n:true}, {w:"Skow", e:null, n:true}
+  ]},
+  10: { title: "OP-10 // SILENT LETTERS", code: "COVERT OPS", words: [
+    {w:"Knight", e:"⚔️"}, {w:"Wreck", e:null}, {w:"Bomb", e:"💣"}, {w:"Knife", e:"🔪"},
+    {w:"Combat", e:null}, {w:"Target", e:"🎯"}, {w:"Patrol", e:null}, {w:"Signal", e:"📡"},
+    {w:"Ranger", e:null}, {w:"Mission", e:null},
+    {w:"Knab", e:null, n:true}, {w:"Wring", e:null, n:true}, {w:"Gomb", e:null, n:true},
+    {w:"Platchel", e:null, n:true}, {w:"Skandle", e:null, n:true}
+  ]},
+  11: { title: "OP-11 // AFFIXES", code: "MISSION COMMAND", words: [
+    {w:"Unhelpful", e:null}, {w:"Deployment", e:null}, {w:"Tactical", e:null}, {w:"Submarine", e:"🛳️"},
+    {w:"Reload", e:null}, {w:"Invisible", e:"👻"}, {w:"Disarm", e:null}, {w:"Commander", e:"🎖️"},
+    {w:"Operation", e:null}, {w:"Defensive", e:"🛡️"}, {w:"Infiltration", e:null},
+    {w:"Counterattack", e:null}, {w:"Bodyguard", e:"💂"}, {w:"Specialist", e:null},
+    {w:"Unstoppable", e:null}
+  ]}
+};
+
+const meanings = {
+  "Gun":"Gun. A weapon soldiers carry.",
+  "Med":"Med. Short for medic — the soldier who treats wounded teammates.",
+  "Map":"Map. Soldiers read maps to navigate the mission.",
+  "Fin":"Fin. Scuba fins help frogmen swim fast underwater.",
+  "Mud":"Mud. Soldiers crawl through mud to stay hidden.",
+  "Jet":"Jet. A fast military aircraft.",
+  "Cop":"Cop. A police officer who keeps the peace.",
+  "Run":"Run. Move fast on foot — every soldier must run.",
+  "Kit":"Kit. The gear soldiers carry on their mission.",
+  "Pit":"Pit. A deep hole soldiers dig for cover.",
+  "Nut":"Nut. A small hard food soldiers eat in the field.",
+  "Ship":"Ship. A large vessel that carries troops across the sea.",
+  "Chop":"Chop. Short for chopper — a helicopter.",
+  "Thin":"Thin. Not thick — the opposite of thick.",
+  "Whip":"Whip. A long cord used to strike or signal.",
+  "Deck":"Deck. The flat surface of a ship or aircraft carrier.",
+  "Shot":"Shot. A bullet fired from a weapon.",
+  "Chat":"Chat. Soldiers chat on the radio during the mission.",
+  "Cash":"Cash. Money soldiers might need for supplies.",
+  "Tech":"Tech. Technology used by Special Forces.",
+  "Path":"Path. The route soldiers take through enemy territory.",
+  "Cliff":"Cliff. Soldiers climb cliffs to reach high positions.",
+  "Boss":"Boss. The commander who leads the team.",
+  "Buzz":"Buzz. The sound a drone makes overhead.",
+  "Pass":"Pass. A secret code or route through a mountain.",
+  "Shell":"Shell. The casing of a bullet, or armor protection.",
+  "Muck":"Muck. Thick mud that slows soldiers down.",
+  "Shed":"Shed. A small building used to store gear.",
+  "Shut":"Shut. To close — shut the door behind you.",
+  "Hut":"Hut. A small shelter where soldiers rest.",
+  "Hill":"Hill. Soldiers take the hill to control the high ground.",
+  "Blast":"Blast. The explosion from a grenade or bomb.",
+  "Stamp":"Stamp. A mark of approval on mission orders.",
+  "Crawl":"Crawl. Move low on the ground to stay hidden.",
+  "Grip":"Grip. A soldier's strong hold on his weapon.",
+  "Track":"Track. Footprints left behind by the enemy.",
+  "Swift":"Swift. Fast and quiet — like a swift attack.",
+  "Trent":"Trent. A soldier's name — common code name.",
+  "Plant":"Plant. To place explosives in position.",
+  "Crest":"Crest. The top of a hill or wave.",
+  "Flank":"Flank. Attack the enemy from the side.",
+  "Brave":"Brave. Without fear — soldiers must be brave.",
+  "Snipe":"Snipe. To shoot from far away with precision.",
+  "Zone":"Zone. The drop zone — where soldiers parachute in.",
+  "Base":"Base. The military headquarters.",
+  "Blade":"Blade. The sharp part of a knife.",
+  "Code":"Code. Secret message Special Forces use.",
+  "Drive":"Drive. To operate a vehicle on a mission.",
+  "Rope":"Rope. Used for climbing or fast-roping from helicopters.",
+  "Smoke":"Smoke. Soldiers use smoke to hide their position.",
+  "Fire":"Fire. To shoot a weapon — open fire.",
+  "Fly":"Fly. To pilot an aircraft.",
+  "Spy":"Spy. A soldier who gathers secret information.",
+  "Pi":"Pi. A math symbol — used in calculations.",
+  "No":"No. The word for refusal — a soldier follows orders.",
+  "Sky":"Sky. The space above where aircraft fly.",
+  "Cry":"Cry. Even soldiers cry when teammates fall.",
+  "Ally":"Ally. A friend who fights on your side.",
+  "Army":"Army. The branch of the military that fights on land.",
+  "Navy":"Navy. The branch that fights at sea — home of the SEALs.",
+  "Duty":"Duty. The mission a soldier must complete.",
+  "Armor":"Armor. Protective gear soldiers wear.",
+  "Target":"Target. The objective of the mission.",
+  "March":"March. To walk in formation — left, right, left.",
+  "Fort":"Fort. A defended position.",
+  "Cargo":"Cargo. Supplies carried by aircraft or ship.",
+  "Shirt":"Shirt. Part of the uniform — the soldier's tactical shirt.",
+  "Bird":"Bird. Military slang for helicopter.",
+  "Storm":"Storm. To attack with sudden force — storm the building.",
+  "Force":"Force. The strength of the unit.",
+  "Alarm":"Alarm. A warning signal — enemy approaching.",
+  "Raid":"Raid. A surprise attack on an enemy position.",
+  "Boat":"Boat. The Zodiac inflatable boat used by SEALs.",
+  "Night":"Night. When Special Forces operate — under cover of darkness.",
+  "Team":"Team. The squad that operates together — SEAL Team Six.",
+  "Fleet":"Fleet. A group of military ships.",
+  "Train":"Train. To practice the mission again and again.",
+  "Coast":"Coast. The shoreline soldiers land on.",
+  "Brain":"Brain. The mission planner of the team.",
+  "Flight":"Flight. The journey by aircraft.",
+  "Main":"Main. The most important — the main objective.",
+  "Scout":"Scout. A soldier sent ahead to gather information.",
+  "Hawk":"Hawk. Short for Blackhawk — a military helicopter.",
+  "Prowl":"Prowl. To move quietly looking for the enemy.",
+  "Boots":"Boots. The soldier's heavy combat footwear.",
+  "Launch":"Launch. To fire a missile or start the mission.",
+  "Destroy":"Destroy. To take out the enemy target completely.",
+  "Oil":"Oil. Fuel that powers the engines.",
+  "Crew":"Crew. The team that operates a vehicle or aircraft.",
+  "Ground":"Ground. The land where soldiers fight.",
+  "Sound":"Sound. The noise of battle — silence in stealth.",
+  "Knight":"Knight. An ancient warrior — Special Forces are modern knights.",
+  "Wreck":"Wreck. The remains of destroyed equipment.",
+  "Bomb":"Bomb. An explosive weapon.",
+  "Knife":"Knife. The combat blade every soldier carries.",
+  "Combat":"Combat. The actual fighting in a mission.",
+  "Patrol":"Patrol. To move through an area checking for enemies.",
+  "Signal":"Signal. A communication sent to the team.",
+  "Ranger":"Ranger. An elite soldier of the U.S. Army Rangers.",
+  "Mission":"Mission. The task the team must complete.",
+  "Unhelpful":"Unhelpful. Not helpful — slows the team down.",
+  "Deployment":"Deployment. When soldiers are sent on a mission abroad.",
+  "Tactical":"Tactical. Smart and planned — like a tactical strike.",
+  "Submarine":"Submarine. A vessel that operates underwater.",
+  "Reload":"Reload. To put new bullets in the weapon.",
+  "Invisible":"Invisible. Cannot be seen — like a ghost soldier.",
+  "Disarm":"Disarm. To remove a weapon — disarm the bomb.",
+  "Commander":"Commander. The officer who leads the unit.",
+  "Operation":"Operation. The full mission plan.",
+  "Defensive":"Defensive. Protecting — defending a position.",
+  "Infiltration":"Infiltration. Sneaking into enemy territory.",
+  "Counterattack":"Counterattack. To strike back after being attacked.",
+  "Bodyguard":"Bodyguard. A soldier who protects an important person.",
+  "Specialist":"Specialist. A soldier trained in one specific skill.",
+  "Unstoppable":"Unstoppable. Cannot be stopped — the unstoppable force."
+};
+
+// ============== STATE ==============
+let currentGroup = null;
+let currentWordIdx = 0;
+let sessionResults = [];
+let revealed = false;
+let gyroPermissionAsked = false;
+let gyroData = { last: null, stillStart: null };
+let gyroListener = null;
+let groundingActive = false;
+let countdownActive = false;
+
+const STILLNESS_THRESHOLD = 5.0;
+const STILLNESS_HOLD_MS = 1500;
+
+// ============== AUDIO CTX (for tactical sounds) ==============
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
+  return audioCtx;
+}
+
+function beep(freq, duration, type='sine', volume=0.15) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  osc.start();
+  osc.stop(ctx.currentTime + duration);
+}
+
+function lockBeep() { beep(880, 0.12, 'square', 0.08); setTimeout(() => beep(1320, 0.18, 'square', 0.08), 80); }
+function correctChime() { beep(660, 0.1, 'sine', 0.12); setTimeout(() => beep(990, 0.18, 'sine', 0.12), 80); }
+function missTone() { beep(220, 0.25, 'sawtooth', 0.08); }
+function countdownTick() { beep(440, 0.06, 'square', 0.1); }
+function goSignal() { beep(880, 0.2, 'sine', 0.15); }
+
+// ============== INIT ==============
+function init() { renderGroupGrid(); }
+
+function renderGroupGrid() {
+  const grid = document.getElementById('groupGrid');
+  grid.innerHTML = '';
+  for (let g = 1; g <= 11; g++) {
+    const grp = groups[g];
+    const btn = document.createElement('button');
+    btn.className = 'group-btn';
+    btn.innerHTML = `<span class="op-num">OP-${String(g).padStart(2,'0')}</span><span class="op-name">${shortName(g)}</span>`;
+    btn.onclick = () => startGroupGrounding(g);
+    grid.appendChild(btn);
+  }
+}
+
+function shortName(g) {
+  return ({1:"Short Vowels",2:"Digraphs",3:"FLSZ + H",4:"Blends",5:"Silent E",6:"Open + Y",7:"R-Control",8:"Vowel Teams",9:"Diphthongs",10:"Silent Ltrs",11:"Affixes"})[g];
+}
+
+// ============== GYRO ==============
+async function requestGyroPermission() {
+  if (gyroPermissionAsked) return true;
+  gyroPermissionAsked = true;
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    try { const r = await DeviceOrientationEvent.requestPermission(); return r === 'granted'; }
+    catch(e) { return false; }
+  }
+  return true;
+}
+
+function startGyroListening() {
+  stopGyroListening();
+  gyroData = { last: null, stillStart: null };
+  gyroListener = (e) => {
+    if (countdownActive) return;
+    const cur = { b: e.beta||0, g: e.gamma||0 };
+    if (!gyroData.last) { gyroData.last = cur; return; }
+    const dx = Math.abs(cur.b - gyroData.last.b);
+    const dy = Math.abs(cur.g - gyroData.last.g);
+    const movement = dx + dy;
+    
+    const fillPct = Math.max(0, Math.min(100, (1 - movement/STILLNESS_THRESHOLD) * 100));
+    const fillEl = document.getElementById('gyroBarFill');
+    if (fillEl) fillEl.style.width = fillPct + '%';
+    
+    if (movement < STILLNESS_THRESHOLD) {
+      if (!gyroData.stillStart) gyroData.stillStart = Date.now();
+      const held = Date.now() - gyroData.stillStart;
+      
+      document.getElementById('gyroStatus').textContent = `// LOCK ACQUIRING ${Math.floor(held/100)/10}s`;
+      document.getElementById('gyroStatus').classList.add('steady');
+      document.getElementById('reticleWrap').classList.add('locked');
+      document.getElementById('reticleCenter').classList.add('locked');
+      document.getElementById('reticleCenter').classList.remove('jitter');
+      
+      if (held > STILLNESS_HOLD_MS && groundingActive && !countdownActive) {
+        triggerCountdown();
+      }
+    } else {
+      gyroData.stillStart = null;
+      document.getElementById('gyroStatus').textContent = '// HOLD STEADY...';
+      document.getElementById('gyroStatus').classList.remove('steady');
+      document.getElementById('reticleWrap').classList.remove('locked');
+      document.getElementById('reticleCenter').classList.remove('locked');
+      document.getElementById('reticleCenter').classList.add('jitter');
+    }
+    gyroData.last = cur;
+  };
+  window.addEventListener('deviceorientation', gyroListener);
+}
+
+function stopGyroListening() {
+  if (gyroListener) {
+    window.removeEventListener('deviceorientation', gyroListener);
+    gyroListener = null;
+  }
+}
+
+async function startGroupGrounding(g) {
+  currentGroup = g;
+  currentWordIdx = 0;
+  sessionResults = [];
+  document.querySelectorAll('.group-btn').forEach((b,i) => b.classList.toggle('active', (i+1)===g));
+  
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('groupSelector').classList.add('hidden');
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('history').classList.add('hidden');
+  document.getElementById('grounding').classList.remove('hidden');
+  
+  document.getElementById('groundingTitle').textContent = groups[g].title;
+  document.getElementById('opIdHud').textContent = `OP-${String(g).padStart(2,'0')} // ACTIVE`;
+  document.getElementById('gyroBarFill').style.width = '0%';
+  document.getElementById('gyroStatus').textContent = '// SCANNING FOR SIGNAL...';
+  document.getElementById('gyroStatus').classList.remove('steady');
+  document.getElementById('countdown').textContent = '';
+  document.getElementById('reticleWrap').classList.remove('locked');
+  document.getElementById('reticleCenter').classList.remove('locked');
+  document.getElementById('reticleCenter').classList.remove('jitter');
+  countdownActive = false;
+  
+  speakText('Are you ready, soldier?');
+  
+  const granted = await requestGyroPermission();
+  groundingActive = true;
+  
+  if (granted) {
+    startGyroListening();
+    setTimeout(() => {
+      if (groundingActive && !gyroData.last) {
+        document.getElementById('gyroStatus').textContent = '// NO SIGNAL — OVERRIDE TO CONTINUE';
+      }
+    }, 3000);
+  } else {
+    document.getElementById('gyroStatus').textContent = '// SENSOR OFFLINE — OVERRIDE TO CONTINUE';
+  }
+}
+
+function triggerCountdown() {
+  if (countdownActive) return;
+  countdownActive = true;
+  groundingActive = false;
+  lockBeep();
+  
+  speakText('Target locked.');
+  
+  const cd = document.getElementById('countdown');
+  document.getElementById('gyroStatus').textContent = '// TARGET LOCKED';
+  
+  let n = 3;
+  cd.textContent = n;
+  countdownTick();
+  
+  const tick = () => {
+    n--;
+    if (n > 0) {
+      cd.textContent = n;
+      countdownTick();
+      setTimeout(tick, 700);
+    } else {
+      cd.textContent = 'GO';
+      goSignal();
+      setTimeout(() => completeGrounding(), 600);
+    }
+  };
+  setTimeout(tick, 700);
+}
+
+function completeGrounding() {
+  stopGyroListening();
+  countdownActive = false;
+  document.getElementById('grounding').classList.add('hidden');
+  document.getElementById('assessment').classList.remove('hidden');
+  document.getElementById('groupTitleMeta').textContent = `OP-${String(currentGroup).padStart(2,'0')}`;
+  document.getElementById('wordTotal').textContent = groups[currentGroup].words.length;
+  showWord();
+}
+
+function skipGrounding() {
+  if (countdownActive) return;
+  groundingActive = false;
+  stopGyroListening();
+  document.getElementById('grounding').classList.add('hidden');
+  document.getElementById('assessment').classList.remove('hidden');
+  document.getElementById('groupTitleMeta').textContent = `OP-${String(currentGroup).padStart(2,'0')}`;
+  document.getElementById('wordTotal').textContent = groups[currentGroup].words.length;
+  showWord();
+}
+
+// ============== WORDS ==============
+function showWord() {
+  const w = groups[currentGroup].words[currentWordIdx];
+  const stim = document.getElementById('stimulus');
+  revealed = false;
+  
+  document.getElementById('wordNum').textContent = currentWordIdx + 1;
+  document.getElementById('noteInput').value = '';
+  const pct = (currentWordIdx / groups[currentGroup].words.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  
+  if (w.n) {
+    stim.innerHTML = `
+      <div class="audio-icon pulse">📡</div>
+      <div class="stim-tag">// CIPHER WORD // AUDIO ONLY</div>
+      <button class="replay-btn" onclick="speakWord('${w.w}')">↻ Replay Signal</button>
+    `;
+  } else if (w.e) {
+    stim.innerHTML = `
+      <div class="emoji-big">${w.e}</div>
+      <button class="replay-btn" onclick="speakWord('${w.w}')">↻ Replay Signal</button>
+    `;
+  } else {
+    stim.innerHTML = `
+      <div class="audio-icon pulse">📡</div>
+      <div class="stim-tag">// AUDIO TARGET</div>
+      <button class="replay-btn" onclick="speakWord('${w.w}')">↻ Replay Signal</button>
+    `;
+  }
+  
+  setTimeout(() => speakWord(w.w), 400);
+}
+
+function speakWord(word) {
+  if (!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(word);
+  u.rate = 0.8;
+  u.pitch = 1.0;
+  u.lang = 'en-US';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+function speakText(text, onDone) {
+  if (!('speechSynthesis' in window)) { if (onDone) onDone(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92;
+  u.pitch = 1.0;
+  u.lang = 'en-US';
+  let fired = false;
+  if (onDone) {
+    u.onend = () => { if (!fired) { fired = true; onDone(); } };
+    // Safety fallback in case onend never fires (some mobile browsers)
+    setTimeout(() => { if (!fired) { fired = true; onDone(); } }, Math.max(3500, text.length * 90));
+  }
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+function revealWord() {
+  const w = groups[currentGroup].words[currentWordIdx];
+  const stim = document.getElementById('stimulus');
+  if (revealed) return;
+  revealed = true;
+  stim.innerHTML += `<div class="reveal-word">${w.w.toUpperCase()}</div>`;
+  if (!w.n && meanings[w.w]) {
+    setTimeout(() => speakText(meanings[w.w]), 400);
+  } else {
+    setTimeout(() => speakWord(w.w), 400);
+  }
+}
+
+function recordResponse(status) {
+  const w = groups[currentGroup].words[currentWordIdx];
+  const note = document.getElementById('noteInput').value.trim();
+  sessionResults.push({
+    group: currentGroup, word: w.w, nonsense: !!w.n,
+    status: status, note: note, timestamp: new Date().toISOString()
+  });
+  
+  if (status === 'correct') {
+    correctChime();
+    if (!w.n && meanings[w.w]) {
+      // Brief delay so chime doesn't clash with speech, then wait for full speech before advancing
+      setTimeout(() => {
+        speakText(meanings[w.w], () => {
+          setTimeout(advance, 400);
+        });
+      }, 250);
+      return;
+    }
+  } else if (status === 'incorrect') {
+    missTone();
+  }
+  advance();
+}
+
+function advance() {
+  currentWordIdx++;
+  if (currentWordIdx >= groups[currentGroup].words.length) {
+    showResults();
+  } else {
+    showWord();
+  }
+}
+
+function endSession() {
+  if (sessionResults.length === 0) {
+    if (!confirm('No data recorded. Abort mission?')) return;
+  }
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  
+  speakText('Mission complete. Return to base.');
+  
+  const correct = sessionResults.filter(r => r.status === 'correct').length;
+  const incorrect = sessionResults.filter(r => r.status === 'incorrect').length;
+  const skipped = sessionResults.filter(r => r.status === 'skip').length;
+  
+  document.getElementById('statCorrect').textContent = correct;
+  document.getElementById('statIncorrect').textContent = incorrect;
+  document.getElementById('statSkip').textContent = skipped;
+  
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+  sessionResults.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'result-row';
+    const icon = r.status === 'correct' ? '✓' : r.status === 'incorrect' ? '✗' : '→';
+    const label = r.status === 'correct' ? 'HIT' : r.status === 'incorrect' ? 'MISS' : 'SKIP';
+    const noteText = r.note ? ` <span style="color:var(--text-dim); font-style:italic; font-size:11px;">(${r.note})</span>` : '';
+    const cipherTag = r.nonsense ? ' <span style="font-size:9px; color:var(--text-dim); letter-spacing:2px;">[CIPHER]</span>' : '';
+    div.innerHTML = `<span class="word">${r.word.toUpperCase()}${cipherTag}${noteText}</span><span class="status ${r.status}">${icon} ${label}</span>`;
+    list.appendChild(div);
+  });
+  saveSession();
+}
+
+function saveSession() {
+  if (sessionResults.length === 0) return;
+  const history = JSON.parse(localStorage.getItem('danSpellingHistory') || '[]');
+  history.push({
+    group: currentGroup, groupTitle: groups[currentGroup].title,
+    date: new Date().toISOString(), results: sessionResults
+  });
+  localStorage.setItem('danSpellingHistory', JSON.stringify(history));
+}
+
+function newSession() {
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('welcome').classList.remove('hidden');
+  document.getElementById('groupSelector').classList.remove('hidden');
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('opIdHud').textContent = 'OP-00 // READY';
+  currentGroup = null;
+  sessionResults = [];
+}
+
+function nextMission() {
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('groupSelector').classList.remove('hidden');
+  document.getElementById('welcome').classList.remove('hidden');
+}
+
+function exportCSV() {
+  if (sessionResults.length === 0) { alert('No data to export.'); return; }
+  let csv = 'Date,Group,Word,Type,Status,Note\n';
+  sessionResults.forEach(r => {
+    const note = (r.note || '').replace(/"/g, '""');
+    csv += `"${r.timestamp}","OP-${String(r.group).padStart(2,'0')}","${r.word}","${r.nonsense?'cipher':'real'}","${r.status}","${note}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `specops_op${String(currentGroup).padStart(2,'0')}_${dateStr}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function viewHistory() {
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('history').classList.remove('hidden');
+  const history = JSON.parse(localStorage.getItem('danSpellingHistory') || '[]');
+  const list = document.getElementById('historyList');
+  if (history.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:var(--text-dim); padding:20px; letter-spacing:2px; text-transform:uppercase; font-size:11px;">// NO MISSIONS ON RECORD</p>';
+    return;
+  }
+  list.innerHTML = '';
+  history.slice().reverse().forEach((s) => {
+    const correct = s.results.filter(r => r.status === 'correct').length;
+    const incorrect = s.results.filter(r => r.status === 'incorrect').length;
+    const skipped = s.results.filter(r => r.status === 'skip').length;
+    const total = s.results.length;
+    const date = new Date(s.date);
+    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const div = document.createElement('div');
+    div.className = 'result-row';
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'flex-start';
+    div.style.padding = '10px 0';
+    div.innerHTML = `
+      <div style="font-weight:bold; letter-spacing:2px; color:var(--green-bright); font-size:12px;">${s.groupTitle}</div>
+      <div style="font-size:10px; color:var(--text-dim); margin-top:4px; letter-spacing:1px;">${dateStr}</div>
+      <div style="margin-top:6px; font-size:11px; letter-spacing:1px;">
+        <span style="color:var(--green-bright)">HIT: ${correct}</span> · 
+        <span style="color:var(--red)">MISS: ${incorrect}</span> · 
+        <span style="color:var(--amber)">SKIP: ${skipped}</span>
+        <span style="color:var(--text-dim)"> / ${total}</span>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function clearHistory() {
+  if (!confirm('Wipe all mission records? Cannot be undone.')) return;
+  localStorage.removeItem('danSpellingHistory');
+  viewHistory();
+}
+
+init();
+</script>
+</body>
+</html>
